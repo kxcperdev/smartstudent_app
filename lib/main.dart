@@ -7,24 +7,20 @@ import 'ekran_logowania.dart';
 import 'ekran_rejestracji.dart';
 import 'ekran_glowny.dart';
 import 'ekran_splash.dart';
+import 'ekran_ustawienia.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   tz.initializeTimeZones();
 
-  const AndroidInitializationSettings initializationSettingsAndroid =
-  AndroidInitializationSettings('@mipmap/ic_launcher');
-
-  final InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid);
-
+  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+  final InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
   String dzisiaj = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -40,15 +36,48 @@ void main() async {
   runApp(Aplikacja());
 }
 
-class Aplikacja extends StatelessWidget {
+class Aplikacja extends StatefulWidget {
+  @override
+  _AplikacjaState createState() => _AplikacjaState();
+}
+
+class _AplikacjaState extends State<Aplikacja> {
+  bool trybCiemny = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _wczytajUstawienia();
+  }
+
+  Future<void> _wczytajUstawienia() async {
+    final ustawienia = await SharedPreferences.getInstance();
+    setState(() {
+      trybCiemny = ustawienia.getBool('tryb_ciemny') ?? false;
+    });
+  }
+
+  void zmienMotyw(bool nowyTryb) {
+    setState(() {
+      trybCiemny = nowyTryb;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'SmartStudent',
+      themeMode: trybCiemny ? ThemeMode.dark : ThemeMode.light,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
         useMaterial3: true,
+      ),
+      darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
+        colorScheme: ColorScheme.dark(
+          primary: Colors.orange,
+          secondary: Colors.orangeAccent,
+        ),
       ),
       home: EkranSplash(),
       routes: {
@@ -57,6 +86,7 @@ class Aplikacja extends StatelessWidget {
         "/logowanie": (context) => EkranLogowania(),
         "/rejestracja": (context) => EkranRejestracji(),
         "/glowny": (context) => EkranGlowny(),
+        "/ustawienia": (context) => EkranUstawienia(zmienMotyw: zmienMotyw),
       },
     );
   }
