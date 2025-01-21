@@ -6,6 +6,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'ekran_logowania.dart';
 import 'ekran_rejestracji.dart';
 import 'ekran_glowny.dart';
+import 'ekran_splash.dart';
+import 'package:intl/intl.dart';
+import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 FlutterLocalNotificationsPlugin();
@@ -23,6 +27,16 @@ void main() async {
 
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
+  String dzisiaj = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  final ustawienia = await SharedPreferences.getInstance();
+  int poczatkowyCzas = DateTime.now().millisecondsSinceEpoch;
+
+  Timer.periodic(Duration(minutes: 1), (timer) async {
+    int obecnyCzas = DateTime.now().millisecondsSinceEpoch;
+    int roznicaCzasu = (obecnyCzas - poczatkowyCzas) ~/ 1000;
+    await ustawienia.setInt("czas_$dzisiaj", roznicaCzasu);
+  });
+
   runApp(Aplikacja());
 }
 
@@ -36,8 +50,10 @@ class Aplikacja extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      home: AutoryzacjaUzytkownika(),
+      home: EkranSplash(),
       routes: {
+        "/splash": (context) => EkranSplash(),
+        "/autoryzacja": (context) => AutoryzacjaUzytkownika(),
         "/logowanie": (context) => EkranLogowania(),
         "/rejestracja": (context) => EkranRejestracji(),
         "/glowny": (context) => EkranGlowny(),

@@ -22,7 +22,7 @@ class _EkranSplashState extends State<EkranSplash> with SingleTickerProviderStat
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
 
     Timer(Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, "/logowanie");
+      Navigator.pushReplacementNamed(context, "/autoryzacja");
     });
   }
 

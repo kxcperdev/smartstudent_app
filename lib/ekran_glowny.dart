@@ -6,6 +6,7 @@ import 'ekran_pomodoro.dart';
 import 'ekran_terminy.dart';
 import 'ekran_quizy.dart';
 import 'ekran_tryb_skupienia.dart';
+import 'ekran_statystyki.dart';
 
 class EkranGlowny extends StatefulWidget {
   @override
@@ -142,10 +143,13 @@ class _EkranGlownyState extends State<EkranGlowny> {
                       MaterialPageRoute(builder: (context) => EkranTerminow()),
                     );
                   }),
-                  _stworzKafelek("Statystyki", Icons.bar_chart, Colors.orange, () {
-                    Navigator.pushNamed(context, "/statystyki");
-                  }),
-                  _stworzKafelek("Pomodoro", Icons.timer, Colors.red, () {
+                _stworzKafelek("Statystyki", Icons.bar_chart, Colors.orange, () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => EkranStatystyki()),
+                  );
+                }),
+                _stworzKafelek("Pomodoro", Icons.timer, Colors.red, () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => EkranPomodoro()),
