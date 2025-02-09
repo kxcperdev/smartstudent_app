@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'ekran_notatki.dart';
+import 'ekran_pomodoro.dart';
 
 class EkranGlowny extends StatefulWidget {
   @override
@@ -139,7 +140,10 @@ class _EkranGlownyState extends State<EkranGlowny> {
                     Navigator.pushNamed(context, "/statystyki");
                   }),
                   _stworzKafelek("Pomodoro", Icons.timer, Colors.red, () {
-                    Navigator.pushNamed(context, "/pomodoro");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EkranPomodoro()),
+                    );
                   }),
                   _stworzKafelek("Quizy", Icons.quiz, Colors.purple, () {
                     Navigator.pushNamed(context, "/quizy");
