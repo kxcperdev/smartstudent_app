@@ -10,7 +10,7 @@ class EkranPomodoro extends StatefulWidget {
 }
 
 class _EkranPomodoroState extends State<EkranPomodoro> {
-  int _czas = 10;
+  int _czas = 1500;
   bool _czyDziala = false;
   bool _czyPrzerwa = false;
   Timer? _timer;
@@ -22,6 +22,14 @@ class _EkranPomodoroState extends State<EkranPomodoro> {
     super.initState();
     _inicjalizujPowiadomienia();
     _wczytajHistorie();
+  }
+
+  @override
+  void dispose() {
+    if (_timer != null) {
+      _timer!.cancel();
+    }
+    super.dispose();
   }
 
   Future<void> _wczytajHistorie() async {
@@ -52,24 +60,28 @@ class _EkranPomodoroState extends State<EkranPomodoro> {
       _czyDziala = true;
     });
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (_czas > 0) {
+      if (_czas > 0 && mounted) {
         setState(() {
           _czas--;
         });
       } else {
         _stopTimer();
-        _wykonajZakonczenieCzasu();
+        if (mounted) {
+          _wykonajZakonczenieCzasu();
+        }
       }
     });
   }
 
   void _wykonajZakonczenieCzasu() async {
+    if (!mounted) return;
     _pokazPowiadomienie();
     final typ = _czyPrzerwa ? 'Przerwa' : 'Nauka';
     await _zapiszHistorie(typ);
+    if (!mounted) return;
     setState(() {
       _czyPrzerwa = !_czyPrzerwa;
-      _czas = _czyPrzerwa ? 5 : 10;
+      _czas = _czyPrzerwa ? 300 : 1500;
       _startTimer();
     });
   }
@@ -78,15 +90,17 @@ class _EkranPomodoroState extends State<EkranPomodoro> {
     if (_timer != null) {
       _timer!.cancel();
     }
-    setState(() {
-      _czyDziala = false;
-    });
+    if (mounted) {
+      setState(() {
+        _czyDziala = false;
+      });
+    }
   }
 
   void resetujTimer() {
     _stopTimer();
     setState(() {
-      _czas = 10;
+      _czas = 1500;
       _czyPrzerwa = false;
     });
   }
