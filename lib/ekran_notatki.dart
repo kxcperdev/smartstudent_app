@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 
 class EkranNotatki extends StatefulWidget {
   @override
@@ -8,113 +10,159 @@ class EkranNotatki extends StatefulWidget {
 }
 
 class _EkranNotatkiState extends State<EkranNotatki> {
-  final TextEditingController _tytulController = TextEditingController();
-  final TextEditingController _trescController = TextEditingController();
-  List<Map<String, dynamic>> _notatki = [];
+  final TextEditingController tytulKontroler = TextEditingController();
+  final TextEditingController trescKontroler = TextEditingController();
+  List<Map<String, dynamic>> listaNotatek = [];
 
   @override
   void initState() {
     super.initState();
-    _zaladujNotatki();
+    zaladujNotatki();
   }
 
-  Future<void> _zaladujNotatki() async {
+  Future<void> zaladujNotatki() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final snapshot = await FirebaseFirestore.instance
+      final uzytkownik = FirebaseAuth.instance.currentUser;
+      if (uzytkownik != null) {
+        final odczyt = await FirebaseFirestore.instance
             .collection('notatki')
-            .where('userId', isEqualTo: user.uid)
+            .where('userId', isEqualTo: uzytkownik.uid)
             .orderBy('timestamp', descending: true)
             .get();
 
         setState(() {
-          _notatki = snapshot.docs.map((doc) => {
-            'id': doc.id,
-            'tytul': doc['tytul'] as String,
-            'tresc': doc['tresc'] as String
+          listaNotatek = odczyt.docs.map((dok) => {
+            'id': dok.id,
+            'tytul': dok['tytul'] as String,
+            'tresc': dok['tresc'] as String
           }).toList();
         });
       }
-    } catch (e) {
-      print("Błąd ładowania notatek: $e");
+    } catch (blad) {
+      pokazKomunikat('Błąd podczas ładowania notatek');
     }
   }
 
-  Future<void> _zapiszNotatke() async {
-    try {
-      String tytul = _tytulController.text.trim();
-      String tresc = _trescController.text.trim();
-      final user = FirebaseAuth.instance.currentUser;
+  Future<void> zapiszNotatkeDoPlikuTxt(String tytul, String tresc, String notatkaId) async {
+    if (await sprawdzUprawnienia()) {
+      try {
+        Directory? katalogPobranych = Directory('/storage/emulated/0/Download');
+        if (!await katalogPobranych.exists()) {
+          katalogPobranych = Directory('/storage/emulated/0/Downloads');
+        }
 
-      if (tytul.isEmpty || tresc.isEmpty || user == null) {
+        final nazwaPliku = 'notatka_${notatkaId}.txt';
+        final plik = File('${katalogPobranych.path}/$nazwaPliku');
+
+        String zawartosc = 'Tytuł: $tytul\nTreść: $tresc';
+        await plik.writeAsString(zawartosc);
+
+        pokazKomunikat('Zapisano notatkę: $nazwaPliku');
+      } catch (blad) {
+        pokazKomunikat('Błąd podczas zapisu do pliku');
+      }
+    }
+  }
+
+  Future<bool> sprawdzUprawnienia() async {
+    var status = await Permission.storage.status;
+    if (status.isDenied) {
+      status = await Permission.storage.request();
+    }
+    return status.isGranted;
+  }
+
+  void pokazKomunikat(String tekst) {
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tekst))
+    );
+  }
+
+  Future<void> zapiszNotatke() async {
+    try {
+      final tytul = tytulKontroler.text.trim();
+      final tresc = trescKontroler.text.trim();
+      final uzytkownik = FirebaseAuth.instance.currentUser;
+
+      if (tytul.isEmpty || tresc.isEmpty || uzytkownik == null) {
+        pokazKomunikat('Wypełnij wszystkie pola');
         return;
       }
 
       await FirebaseFirestore.instance.collection('notatki').add({
-        'userId': user.uid,
+        'userId': uzytkownik.uid,
         'tytul': tytul,
         'tresc': tresc,
         'timestamp': FieldValue.serverTimestamp()
       });
 
-      _tytulController.clear();
-      _trescController.clear();
-      _zaladujNotatki();
-    } catch (e) {
-      print("Błąd zapisu notatki: $e");
+      tytulKontroler.clear();
+      trescKontroler.clear();
+      zaladujNotatki();
+    } catch (blad) {
+      pokazKomunikat('Błąd podczas zapisu notatki');
     }
   }
 
-  Future<void> _edytujNotatke(String id, String tytul, String tresc) async {
+  Future<void> edytujNotatke(String id, String tytul, String tresc) async {
     try {
+      if (tytul.isEmpty || tresc.isEmpty) {
+        pokazKomunikat('Wypełnij wszystkie pola');
+        return;
+      }
+
       await FirebaseFirestore.instance.collection('notatki').doc(id).update({
         'tytul': tytul,
         'tresc': tresc,
       });
-      _zaladujNotatki();
-    } catch (e) {
-      print("Błąd edycji notatki: $e");
+      zaladujNotatki();
+    } catch (blad) {
+      pokazKomunikat('Błąd podczas edycji notatki');
     }
   }
 
-  Future<void> _usunNotatke(String id) async {
+  Future<void> usunNotatke(String id) async {
     try {
       await FirebaseFirestore.instance.collection('notatki').doc(id).delete();
-      _zaladujNotatki();
-    } catch (e) {
-      print("Błąd usuwania notatki: $e");
+      zaladujNotatki();
+      pokazKomunikat('Usunięto notatkę');
+    } catch (blad) {
+      pokazKomunikat('Błąd podczas usuwania notatki');
     }
   }
 
-  void _pokazOknoEdycji(String id, String aktualnyTytul, String aktualnaTresc) {
-    _tytulController.text = aktualnyTytul;
-    _trescController.text = aktualnaTresc;
+  void pokazOknoEdycji(String id, String aktualnyTytul, String aktualnaTresc) {
+    tytulKontroler.text = aktualnyTytul;
+    trescKontroler.text = aktualnaTresc;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) {
+      builder: (kontekst) {
         return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, top: 16, left: 16, right: 16),
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(kontekst).viewInsets.bottom,
+              top: 16,
+              left: 16,
+              right: 16
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller: _tytulController,
+                controller: tytulKontroler,
                 decoration: InputDecoration(labelText: "Tytuł"),
               ),
               SizedBox(height: 10),
               TextField(
-                controller: _trescController,
+                controller: trescKontroler,
                 decoration: InputDecoration(labelText: "Treść"),
                 maxLines: 5,
-                keyboardType: TextInputType.multiline,
               ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  _edytujNotatke(id, _tytulController.text.trim(), _trescController.text.trim());
-                  Navigator.pop(context);
+                  edytujNotatke(id, tytulKontroler.text.trim(), trescKontroler.text.trim());
+                  Navigator.pop(kontekst);
                 },
                 child: Text("Zapisz zmiany"),
               )
@@ -125,36 +173,40 @@ class _EkranNotatkiState extends State<EkranNotatki> {
     );
   }
 
-  void _pokazOknoDodawania() {
-    _tytulController.clear();
-    _trescController.clear();
+  void pokazOknoDodawania() {
+    tytulKontroler.clear();
+    trescKontroler.clear();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) {
+      builder: (kontekst) {
         return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, top: 16, left: 16, right: 16),
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(kontekst).viewInsets.bottom,
+              top: 16,
+              left: 16,
+              right: 16
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller: _tytulController,
+                controller: tytulKontroler,
                 decoration: InputDecoration(labelText: "Tytuł"),
               ),
               SizedBox(height: 10),
               TextField(
-                controller: _trescController,
+                controller: trescKontroler,
                 decoration: InputDecoration(labelText: "Treść"),
                 maxLines: 5,
-                keyboardType: TextInputType.multiline,
               ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  _zapiszNotatke();
-                  Navigator.pop(context);
+                  zapiszNotatke();
+                  Navigator.pop(kontekst);
                 },
-                child: Text("Dodaj Notatkę"),
+                child: Text("Dodaj notatkę"),
               )
             ],
           ),
@@ -172,15 +224,17 @@ class _EkranNotatkiState extends State<EkranNotatki> {
       ),
       body: Padding(
         padding: EdgeInsets.all(16),
-        child: _notatki.isEmpty
+        child: listaNotatek.isEmpty
             ? Center(child: Text("Brak notatek. Dodaj nową!"))
             : ListView.builder(
-          itemCount: _notatki.length,
-          itemBuilder: (context, index) {
-            final notatka = _notatki[index];
+          itemCount: listaNotatek.length,
+          itemBuilder: (kontekst, indeks) {
+            final notatka = listaNotatek[indeks];
             return Card(
               color: Colors.blue[100],
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)
+              ),
               child: ListTile(
                 title: Text(
                   notatka['tytul']!,
@@ -191,12 +245,24 @@ class _EkranNotatkiState extends State<EkranNotatki> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
+                      icon: Icon(Icons.save_alt, color: Colors.blue),
+                      onPressed: () => zapiszNotatkeDoPlikuTxt(
+                          notatka['tytul']!,
+                          notatka['tresc']!,
+                          notatka['id']!
+                      ),
+                    ),
+                    IconButton(
                       icon: Icon(Icons.edit, color: Colors.green),
-                      onPressed: () => _pokazOknoEdycji(notatka['id']!, notatka['tytul']!, notatka['tresc']!),
+                      onPressed: () => pokazOknoEdycji(
+                          notatka['id']!,
+                          notatka['tytul']!,
+                          notatka['tresc']!
+                      ),
                     ),
                     IconButton(
                       icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _usunNotatke(notatka['id']!),
+                      onPressed: () => usunNotatke(notatka['id']!),
                     ),
                   ],
                 ),
@@ -207,7 +273,7 @@ class _EkranNotatkiState extends State<EkranNotatki> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blue,
-        onPressed: _pokazOknoDodawania,
+        onPressed: pokazOknoDodawania,
         child: Icon(Icons.add),
       ),
     );
