@@ -12,7 +12,20 @@
           "package_name": "com.kg43032dsw.smartstudent_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "898554780769-e7g1mi28toofgrg5975fs5fb67dl8c9u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kg43032dsw.smartstudent_app",
+            "certificate_hash": "4995ef3a112a439173cbb6a2c9267826a0114a57"
+          }
+        },
+        {
+          "client_id": "898554780769-opb4kvvj8gk1c3r27ivn1hc8qb6mipo8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDfiYfqiNJexDtyspQCu4uVuopxzflZCKE"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "898554780769-opb4kvvj8gk1c3r27ivn1hc8qb6mipo8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "898554780769-h92kubu2n0cpkhi09jjp8l1tc0aji1ro.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.kg43032dsw.smartstudentApp"
+              }
+            }
+          ]
         }
       }
     }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'ekran_notatki.dart';
 
 class EkranGlowny extends StatefulWidget {
   @override
@@ -50,6 +51,16 @@ class _EkranGlownyState extends State<EkranGlowny> {
     await prefs.remove("imieUzytkownika");
     await FirebaseAuth.instance.signOut();
     Navigator.pushReplacementNamed(context, "/logowanie");
+  }
+
+  void _otworzDodawanieNotatki() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => EkranNotatki()),
+    );
+    if (result != null) {
+      print("Dodano notatkę: ${result['tytul']} - ${result['tresc']}");
+    }
   }
 
   Widget _stworzKafelek(String tytul, IconData ikona, Color kolor, VoidCallback akcja) {
@@ -120,9 +131,7 @@ class _EkranGlownyState extends State<EkranGlowny> {
                 crossAxisSpacing: 20,
                 mainAxisSpacing: 20,
                 children: [
-                  _stworzKafelek("Notatki", Icons.note, Colors.blue, () {
-                    Navigator.pushNamed(context, "/notatki");
-                  }),
+                  _stworzKafelek("Notatki", Icons.note, Colors.blue, _otworzDodawanieNotatki),
                   _stworzKafelek("Terminy", Icons.calendar_today, Colors.green, () {
                     Navigator.pushNamed(context, "/terminy");
                   }),
