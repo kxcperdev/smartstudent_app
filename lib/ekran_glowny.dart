@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'ekran_notatki.dart';
 import 'ekran_pomodoro.dart';
+import 'ekran_terminy.dart';
 
 class EkranGlowny extends StatefulWidget {
   @override
@@ -134,7 +135,10 @@ class _EkranGlownyState extends State<EkranGlowny> {
                 children: [
                   _stworzKafelek("Notatki", Icons.note, Colors.blue, _otworzDodawanieNotatki),
                   _stworzKafelek("Terminy", Icons.calendar_today, Colors.green, () {
-                    Navigator.pushNamed(context, "/terminy");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EkranTerminow()),
+                    );
                   }),
                   _stworzKafelek("Statystyki", Icons.bar_chart, Colors.orange, () {
                     Navigator.pushNamed(context, "/statystyki");
