@@ -5,6 +5,7 @@ import 'ekran_notatki.dart';
 import 'ekran_pomodoro.dart';
 import 'ekran_terminy.dart';
 import 'ekran_quizy.dart';
+import 'ekran_tryb_skupienia.dart';
 
 class EkranGlowny extends StatefulWidget {
   @override
@@ -156,8 +157,11 @@ class _EkranGlownyState extends State<EkranGlowny> {
                       MaterialPageRoute(builder: (context) => EkranQuizow()),
                     );
                   }),
-                  _stworzKafelek("Tryb skupienia", Icons.block, Colors.teal, () {
-                    Navigator.pushNamed(context, "/skupienie");
+                  _stworzKafelek("Tryb Skupienia", Icons.block, Colors.teal, () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EkranTrybSkupienia()),
+                    );
                   }),
                 ],
               ),
