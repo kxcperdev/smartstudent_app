@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'ekran_notatki.dart';
 import 'ekran_pomodoro.dart';
 import 'ekran_terminy.dart';
+import 'ekran_quizy.dart';
 
 class EkranGlowny extends StatefulWidget {
   @override
@@ -150,7 +151,10 @@ class _EkranGlownyState extends State<EkranGlowny> {
                     );
                   }),
                   _stworzKafelek("Quizy", Icons.quiz, Colors.purple, () {
-                    Navigator.pushNamed(context, "/quizy");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EkranQuizow()),
+                    );
                   }),
                   _stworzKafelek("Tryb skupienia", Icons.block, Colors.teal, () {
                     Navigator.pushNamed(context, "/skupienie");
